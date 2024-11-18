@@ -1,0 +1,30 @@
+Thank you for installing {{ .Chart.Name }}.
+
+Your release is named {{ .Release.Name }}.
+
+{{ if .Values.global.use_local_llm }}
+The Local LLM mode is enabled. This is not recommened.
+This means that the model will be downloaded from ollama, and this may take ~5minutes. Then loading the first query may take up to 10 minutes. Subsuquent queries will be faster.
+
+It is recommended to use OpenAI for a better experience. To enable OpenAI, set the global.use_local_llm to false in the values.yaml file, and provide an OpenAI API Key.
+{{ else }}
+The OpenAI API is enabled. This assumes you have provided an OpenAI API Key in the values.yaml file.
+{{ end }}
+
+To learn more about the release, try:
+
+  $ helm status {{ .Release.Name }}
+  $ helm get all {{ .Release.Name }}
+
+Wait unitl all pods have started by running.
+Note! If using the local LLM mode it may take ~5 minutes to download the inital model.
+
+  $ kubectl get pods
+
+View the app by port forwarding the pal service with:
+
+  $ kubectl port-forward svc/{{ .Release.Name }}-pal-svc 80:8000
+
+And find the app at:
+
+  http://localhost

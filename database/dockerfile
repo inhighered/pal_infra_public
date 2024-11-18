@@ -1,0 +1,11 @@
+FROM postgres:16
+
+# copy over the startup scripts
+COPY ./init_setup /docker-entrypoint-initdb.d
+COPY ./post_setup/init-user.sh /docker-entrypoint-initdb.d/init-user.sh
+# this allows postgres to run the scripts
+RUN chmod -R 775 /docker-entrypoint-initdb.d
+
+# run locally:
+# docker build --no-cache -t pal-postgres .
+# docker run --name pal-postgres -v ${PWD}/local_volume:/var/lib/postgresql/data -p 5432:5432 pal-postgres

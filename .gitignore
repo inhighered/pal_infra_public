@@ -1,0 +1,8 @@
+*.env
+*.ps1
+**/encode.sh
+**/secrets.yaml
+**/secrets/**
+secrets/**
+**/__pycache__/
+**/local_volume/**

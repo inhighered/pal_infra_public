@@ -1,0 +1,39 @@
+# Default values for pal app
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+global:
+  # local runs locally, but pulls images from the cloud
+  deployment_type: test # options: local, test, gcp
+  use_local_llm: True # True / False - if false an OpenAI API key is required
+
+database:
+  default_secrets:
+    # change these values to your own
+    POSTGRES_DB: pal
+    POSTGRES_USER: admin
+    POSTGRES_PASSWORD: "admin"
+    PAL_SVC_PASSWORD: "svc123!"
+  limits:
+    memory: "1Gi"
+    cpu: "500m"
+  storage: 1Gi
+
+
+pal_app:
+  default_secrets:
+    # change these values to your own
+    OPENAI_API_KEY: "<your key here>" # required if use_local_llm is False
+    DB_NAME: pal
+    DB_USER: admin
+    DB_PASSWORD: "admin"
+  limits:
+    memory: "1Gi"
+    cpu: "500m"
+  storage: 1Gi
+
+
+local_llm:
+  limits:
+    memory: "6Gi"
+    cpu: "4"
+  storage: 5Gi

@@ -1,0 +1,16 @@
+{{ if .Values.global.use_local_llm }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-ollama-svc
+spec:
+  type: ClusterIP
+  selector:
+    app: ollama
+  ports:
+    - protocol: TCP
+      port: 11434
+      targetPort: 11434
+
+{{ else }}
+{{ end }}

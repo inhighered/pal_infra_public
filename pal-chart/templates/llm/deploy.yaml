@@ -1,0 +1,55 @@
+{{ if .Values.global.use_local_llm }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-ollama
+  labels:
+    app: ollama
+
+spec:
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ollama
+  template:
+    metadata:
+      labels:
+        app: ollama
+        
+    spec:
+      containers:
+      - name: ollama
+        image: ollama/ollama:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 11434
+        lifecycle:
+            postStart:
+              exec:
+                command: ["ollama", "pull", "llama3.2:1b"]
+
+        readinessProbe:
+        httpGet:
+            path: /
+            port: 11434
+        initialDelaySeconds: 30
+        periodSeconds: 30
+
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 11434
+          initialDelaySeconds: 10
+          periodSeconds: 30
+                  
+        resources:
+          limits:
+            memory: "6Gi"
+            cpu: "4"
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+{{ else }}
+{{ end }}

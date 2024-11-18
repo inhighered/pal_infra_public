@@ -1,0 +1,67 @@
+# For private cloud deployments
+name: Push Pal Images To GCP
+
+on:
+  # push:
+  #   branches:
+  #     - main
+  workflow_dispatch:
+      
+jobs:
+  build-and-push:
+    env:
+      REGISTRY_PATH: "${{ secrets.REGISTRY_LOCATION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/${{ secrets.REGISTRY_NAME }}"
+      DB_IMAGE: pal-postgres
+      DB_INIT_IMAGE: pal-db-init-job
+      APP_IMAGE: pal
+      TEST_IMAGE: pal-test
+
+    permissions: 
+      contents: 'read'
+      id-token: 'write'
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.PAT_TOKEN }}
+
+      - id: gcloud-auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: '${{ secrets.WI_PROVIDER_ID }}'
+          service_account: '${{ secrets.GSA_ID }}'
+          access_token_lifetime: 3600s
+          # legacy way
+          # credentials_json: ${{ secrets.GCP_SA_JSON }}
+
+      - uses: google-github-actions/setup-gcloud@v1
+        with:
+          version: latest
+
+      - name: Sign Into Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ secrets.REGISTRY_LOCATION }}-docker.pkg.dev --quiet
+
+      - name: Build + Push Postgres Init Image
+        run: |
+          echo "${{ env.REGISTRY_PATH }}/${{ env.DB_INIT_IMAGE }}"
+          docker build -t ${{ env.REGISTRY_PATH }}/${{ env.DB_INIT_IMAGE }}:latest ./database_init_job
+          docker push ${{ env.REGISTRY_PATH }}/${{ env.DB_INIT_IMAGE }}:latest
+
+      - name: Build + Push Custom Postgres Image
+        run: |
+          docker build -t   ${{ env.REGISTRY_PATH }}/${{ env.DB_IMAGE }}:latest ./database
+          docker push  ${{ env.REGISTRY_PATH }}/${{ env.DB_IMAGE }}:latest
+
+      - name: Build + Push Pal Image
+        run: |
+          docker build -t  ${{ env.REGISTRY_PATH }}/${{ env.APP_IMAGE }}:latest ./pal
+          docker push  ${{ env.REGISTRY_PATH }}/${{ env.APP_IMAGE }}:latest
+
+      - name: Build + Push Test Image
+        run: |
+          docker build -t  ${{ env.REGISTRY_PATH }}/${{ env.TEST_IMAGE }}:latest ./test_app
+          docker push  ${{ env.REGISTRY_PATH }}/${{ env.TEST_IMAGE }}:latest

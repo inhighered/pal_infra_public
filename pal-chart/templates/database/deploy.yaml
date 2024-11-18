@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-pal-pg
+  labels:
+    app: database
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: database
+  template:
+    metadata:
+      labels:
+        app: database
+        
+    spec:
+      containers:
+      - name: postgres
+        {{ if eq .Values.global.deployment_type "test" }}
+        image: pal-postgres:latest
+        imagePullPolicy: Never
+        {{ else }}
+        image: us-west3-docker.pkg.dev/pal-ed/pal-images/pal-postgres:latest
+        imagePullPolicy: Always
+        {{ end }}
+        ports:
+        - containerPort: 5432
+        envFrom:
+        - secretRef:
+            name: {{ .Release.Name }}-pg-secret
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: {{ .Release.Name }}-pg-pv
+        resources:
+          limits:
+            cpu: "1"
+            memory: "1Gi"
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+        env:
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+
+      volumes:
+      - name: {{ .Release.Name }}-pg-pv # autoamtically created
+        persistentVolumeClaim:
+          claimName: {{ .Release.Name }}-pg-pvc
+        
+  
